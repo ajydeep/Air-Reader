@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Gesture-Controlled PDF Viewer</title>
+  <style>
+    #canvasContainer {
+      width: 100%;
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid black;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvasContainer">
+    <canvas id="pdf-canvas"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    let pdfDoc = null;
+    let pageNum = 1;
+    let scale = 1;
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function renderPage(num) {
+      pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        page.render(renderContext);
+      });
+    }
+
+    pdfjsLib.getDocument("sample.pdf").promise.then(function(pdfDoc_) {
+      pdfDoc = pdfDoc_;
+      renderPage(pageNum);
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if ((event.metaKey || event.ctrlKey) && event.key === '+') {
+        scale += 0.1;
+        renderPage(pageNum);
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === '-') {
+        scale = Math.max(0.5, scale - 0.1);
+        renderPage(pageNum);
+      }
+    });
+  </script>
+</body>
+</html>
